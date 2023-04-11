@@ -86,15 +86,15 @@ Project_List=$(curl -u ${Harbor_User}:${Harbor_Passwd} -H "Content-Type: applica
 echo ${Project_List}
 for Project in ${Project_List}; do
     echo ${Project}
-	#仓库列表，名称包含项目名称
+    #仓库列表，名称包含项目名称
     Repo_List=$(curl -u ${Harbor_User}:${Harbor_Passwd} -H "Content-Type: application/json" -X GET ${Scheme}://${Harbor_Address}/api/v2.0/projects/$Project/repositories -k | jq '.[]' | jq -r '.name')
     for Repo in ${Repo_List}; do
         echo ${Repo}
-		#标签列表
+	#标签列表
         Tag_list=$(curl -u ${Harbor_User}:${Harbor_Passwd} -H "Content-Type: application/json" -X GET ${Scheme}://${Harbor_Address}/v2/$Repo/tags/list -k | jq '.' | jq -r '.tags[]')
         for Tag in ${Tag_list}; do
             echo ${Tag}
-			#将所有镜像清单保存到文件
+	    #将所有镜像清单保存到文件
             echo "${Harbor_Address}/${Repo}:${Tag}" >> ${Image_List_File}
         done
     done
@@ -110,21 +110,21 @@ for Artifact in ${Artifact_List}; do
     #当FD6中没有回车符时，就停止，从而实现线程数量控制		
     read -u6
     {
-	    set -e
+	set -e
         cd ${Backup_Dir} && \
         Image_Name=$(echo ${Artifact} | awk -F/ '{print $3}' |  awk -F: '{print $1}') && \
         Image_Tag=$(echo ${Artifact} | awk -F/ '{print $3}' |  awk -F: '{print $2}') && \
         docker pull ${Artifact} && \
-		docker save ${Artifact} -o ${Image_Name}_${Image_Tag}_$(date '+%Y%m%d-%H%M%S-%N').tar
-		set +e
+	docker save ${Artifact} -o ${Image_Name}_${Image_Tag}_$(date '+%Y%m%d-%H%M%S-%N').tar
+	set +e
         echo >&6
         #当进程结束以后，再向FD6中加上一个回车符，即补上了read -u6减去的那个
 
-		#此方式并发数不可控导致内存溢出，弃用
-		#docker pull ${Artifact} && docker save ${Artifact} -o ${Image_Name}-${Image_Tag}-$(date '+%Y%m%d-%H%M%S-%N').tar &
-		
-		#删除现在镜像，清理磁盘空间。
-		#因不是构建而是备份，所以考虑保留下载的镜像，省去下载时间(镜像已有层不再重复下载)，加快备份和导出的时间
+	#此方式并发数不可控导致内存溢出，弃用
+	#docker pull ${Artifact} && docker save ${Artifact} -o ${Image_Name}-${Image_Tag}-$(date '+%Y%m%d-%H%M%S-%N').tar &
+	
+	#删除现在镜像，清理磁盘空间。
+	#因不是构建而是备份，所以考虑保留下载的镜像，省去下载时间(镜像已有层不再重复下载)，加快备份和导出的时间
         #docker rmi  ${Artifact} 
     }&
 done
