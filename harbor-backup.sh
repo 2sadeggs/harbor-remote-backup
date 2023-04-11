@@ -20,7 +20,7 @@ Harbor_Backup_Log=${Backup_Dir}/harbor-backup-$(date '+%Y%m%d-%H%M%S-%N').log
 Image_List_File=${Backup_Dir}/harbor-images-$(date '+%Y%m%d-%H%M%S-%N').list
 
 #备份文件保留天数
-Maintain_Days=1
+Maintain_Days=3
 
 
 # save stdout and stderr to file descriptors 3 and 4, then redirect them to"foo"
@@ -68,7 +68,9 @@ Scheme=https
 echo "$(date '+%Y%m%d-%H%M%S-%N') start>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
 #清理N天前的备份
-find ${Backup_Dir} -name "*.tar" -o -name "*.log" -o -name "*.list" -type f -mtime +${Maintain_Days} | xargs rm -f
+#find ${Backup_Dir} -name "*.tar" -o -name "*.log" -o -name "*.list" -type f -mtime +${Maintain_Days} | xargs rm -f
+find ${Backup_Dir} \( -name "*.tar" -o -name "*.log" -o -name "*.list" \) -type f -mtime +${Maintain_Days} | xargs rm -f
+#加不加小括号差别很大 加了小括号括号里边的一起运算 不加的话shell解析任何一个或成功就行
 #find -o 选项 也就是逻辑或 或者tar结尾 或者log结尾 或者list结尾
 
 #harbor获取所有镜像列表大概有三个层次
